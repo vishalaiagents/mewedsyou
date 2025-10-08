@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>mewedsyou — Hugging Logo (ThreeJS)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html, body { margin:0; height:100%; background:#0e1116; }
+    #scene { width:100%; height:100%; display:block; }
+    .hint { position:fixed; left:16px; bottom:16px; color:#b8c1cc; font:12px/1.4 system-ui; opacity:.8 }
+  </style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="hint">Hover the logo → the arms hug “weds”</div>
+
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { SVGLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/SVGLoader.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://unpkg.com/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import gsap from 'https://cdn.skypack.dev/gsap@3.12.5';
+
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('scene'), antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e1116);
+
+const camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 200);
+camera.position.set(0, 2.2, 16);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.enableZoom = false;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+const key = new THREE.DirectionalLight(0xffffff, 1.2);
+key.position.set(3,6,6);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 0.6);
+rim.position.set(-6,-2,-4);
+scene.add(rim);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.25, 0.9, 0.85);
+composer.addPass(bloom);
+
+const navy = new THREE.Color('#15202B');
+const coreMat = new THREE.MeshStandardMaterial({ color:navy, roughness:0.35, metalness:0.25 });
+const armMat  = new THREE.MeshStandardMaterial({ color:navy, roughness:0.45, metalness:0.2 });
+
+const group = new THREE.Group();
+scene.add(group);
+
+function shapesToMesh(shapes, depth, material) {
+  const geo = new THREE.ExtrudeGeometry(shapes, { depth, bevelEnabled:true, bevelSegments:4, bevelSize:2, bevelThickness:2 });
+  geo.center();
+  return new THREE.Mesh(geo, material);
+}
+
+const svg = await new SVGLoader().loadAsync('./mewedsyou_hug.svg');
+const groups = {};
+for (const p of svg.paths) {
+  let node = p.userData.node, id=null;
+  while (node && node.nodeName!=='svg' && !id) { if (node.id) id=node.id; node=node.parentNode; }
+  const shapes = SVGLoader.createShapes(p);
+  const mesh = shapesToMesh(shapes, 10, id==='core'?coreMat:armMat);
+  if(!groups[id]){ groups[id]=new THREE.Group(); groups[id].name=id; group.add(groups[id]); }
+  groups[id].add(mesh);
+}
+group.rotation.x=-0.12;
+group.position.y=-0.5;
+
+// Weds label
+function wedsTex(){
+  const c=document.createElement('canvas'); c.width=1024;c.height=256;
+  const ctx=c.getContext('2d');
+  ctx.fillStyle='#15202B'; ctx.fillRect(0,0,c.width,c.height);
+  ctx.font='700 160px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#E9F1F7'; ctx.fillText('weds', c.width/2, c.height/2+4);
+  return new THREE.CanvasTexture(c);
+}
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(7.3,1.6), new THREE.MeshBasicMaterial({map:wedsTex()}));
+plane.position.set(0,0,6.6);
+groups['core']?.add(plane);
+
+// Hover hug animation
+let hugging=false;
+function setHug(on){
+  if(on===hugging) return; hugging=on;
+  const dur=.9, ease='power3.inOut';
+  const L=groups['leftArm'],R=groups['rightArm'];
+  if(L&&R){
+    gsap.to(L.rotation,{z:on?0.18:0,duration:dur,ease});
+    gsap.to(R.rotation,{z:on?-0.18:0,duration:dur,ease});
+    gsap.to(L.position,{x:on?0.5:0,duration:dur,ease});
+    gsap.to(R.position,{x:on?-0.5:0,duration:dur,ease});
+  }
+  gsap.to(coreMat,{emissiveIntensity:on?0.35:0,duration:dur,ease,
+    onUpdate(){coreMat.emissive=new THREE.Color(on?0x274b6d:0);}
+  });
+  gsap.to(group.scale,{x:on?1.02:1,y:on?1.02:1,z:on?1.02:1,duration:dur,ease});
+}
+
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(-2,-2);
+window.addEventListener('pointermove',e=>{
+  const r=renderer.domElement.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+});
+
+gsap.to(group.scale,{x:1.005,y:1.005,z:1.005,duration:2.8,yoyo:true,repeat:-1,ease:'sine.inOut'});
+
+function animate(){
+  ray.setFromCamera(mouse,camera);
+  const hits=ray.intersectObjects(group.children,true);
+  setHug(hits.length>0);
+  controls.update();
+  composer.render();
+  requestAnimationFrame(animate);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  composer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
+</body>
+</html>

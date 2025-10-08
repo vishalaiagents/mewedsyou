@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="600" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <defs>
+    <style type="text/css"><![CDATA[
+      .ink { fill: #15202B; }
+      .accent { fill: #F2F5F7; }
+    ]]></style>
+  </defs>
+
+  <g id="logo-mewedsyou" transform="translate(0,0)">
+    <g id="leftArm" class="ink">
+      <path d="M 220 180 C 110 180, 110 420, 220 420 L 260 420 C 170 420, 170 180, 260 180 Z" />
+      <path d="M 260 300 C 255 290, 255 270, 260 260 L 300 260 L 300 300 Z" />
+      <rect x="300" y="258" width="26" height="44" rx="8" class="ink"/>
+      <rect x="332" y="254" width="26" height="52" rx="8" class="ink"/>
+      <rect x="364" y="260" width="26" height="44" rx="8" class="ink"/>
+    </g>
+
+    <g id="rightArm" class="ink">
+      <path d="M 980 180 C 1090 180, 1090 420, 980 420 L 940 420 C 1030 420, 1030 180, 940 180 Z" />
+      <path d="M 900 300 C 905 290, 905 270, 900 260 L 860 260 L 860 300 Z" />
+      <rect x="830" y="258" width="26" height="44" rx="8" class="ink"/>
+      <rect x="798" y="254" width="26" height="52" rx="8" class="ink"/>
+      <rect x="766" y="260" width="26" height="44" rx="8" class="ink"/>
+    </g>
+
+    <g id="core">
+      <rect x="420" y="235" width="360" height="130" rx="65" class="ink"/>
+      <path d="M 455 265 C 510 215, 710 215, 745 265 C 740 260, 735 258, 730 256 C 695 236, 555 236, 520 256 C 505 265, 480 285, 455 265 Z" class="accent" opacity="0.12"/>
+    </g>
+
+    <g id="meBlocks" class="ink">
+      <rect x="250" y="150" width="120" height="60" rx="20"/>
+      <rect x="250" y="390" width="120" height="60" rx="20"/>
+    </g>
+    <g id="youBlocks" class="ink">
+      <rect x="830" y="150" width="120" height="60" rx="20"/>
+      <rect x="830" y="390" width="120" height="60" rx="20"/>
+    </g>
+  </g>
+</svg>
